@@ -257,7 +257,7 @@ if __name__ == '__main__':
     lam = 1.0
 
     batch_size=128
-    nIter =100
+    nIter =1000
 
     seed_value=[11,12,13]
 

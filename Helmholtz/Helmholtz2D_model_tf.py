@@ -70,7 +70,7 @@ class Helmholtz2D(keras.Model):
 
         # Optimizer
         initial_learning_rate = 1e-3
-        decay_steps = 10
+        decay_steps = 1000
         decay_rate = 0.9
 
         self.learning_rate_fn = keras.optimizers.schedules.ExponentialDecay(
