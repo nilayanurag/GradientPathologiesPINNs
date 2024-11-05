@@ -188,6 +188,8 @@ def training_function(a_1=1, a_2=1, lam=1.0, batch_size=128, nIter=100, seed_val
     # Predicted solution
     U_pred = griddata(X_star, u_pred.flatten(), (x1, x2), method='cubic')
 
+    plot_prediction(x1, x2, U_star, U_pred, parameter_string)
+
     loss_res = model.loss_res_log
     loss_bcs = model.loss_bcs_log
 
@@ -212,13 +214,13 @@ def training_function(a_1=1, a_2=1, lam=1.0, batch_size=128, nIter=100, seed_val
 
 if __name__ == '__main__':
     a_1 = 1
-    a_2 = 1
+    a_2 = 4
 
     # Parameter
     lam = 1.0
 
     batch_size=128
-    nIter =1000
+    nIter =40001
 
     seed_value=1
 
