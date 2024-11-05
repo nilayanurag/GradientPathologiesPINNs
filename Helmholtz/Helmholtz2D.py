@@ -257,12 +257,12 @@ if __name__ == '__main__':
     lam = 1.0
 
     batch_size=128
-    nIter =40001
+    nIter =1000
 
-    seed_value=[11,12,13]
+    seed_value=[11]
 
-    layer_hidden=[3,5,7]
-    layer_width=[30,50,70]
+    layer_hidden=[3]
+    layer_width=[30]
 
     # parser = argparse.ArgumentParser(description="Training function with optional arguments")
     # parser.add_argument("--a_1", type=int, default=a_1, help="Value for a_1")
@@ -282,7 +282,7 @@ if __name__ == '__main__':
     #     nIter=args.nIter,
     #     seed_value=args.seed_value
     # )
-    mlflow.set_experiment("Helmholtz2D_predictive_lab_40k")
+    mlflow.set_experiment("Helmholtz2D_predictive_lab")
     for a1 in a_1:
         for a2 in a_2:
             for seed in seed_value:
