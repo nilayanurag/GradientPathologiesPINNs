@@ -5,6 +5,8 @@ from scipy.interpolate import griddata
 import seaborn as sns
 from Helmholtz2D_model_tf import Sampler, Helmholtz2D
 import os
+import argparse
+
 
 
 def plot_gradient_distributions(gradients_res_dict, gradients_bcs_dict, num_layers,plot_folder, xlim=(-3, 3), ylim=(0, 100)):
@@ -34,8 +36,8 @@ def plot_gradient_distributions(gradients_res_dict, gradients_bcs_dict, num_laye
 def plot_eigenvalues(eigenvalues_res, eigenvalues_bcs,plot_folder):
     fig_5 = plt.figure(5)
     ax = fig_5.add_subplot(1, 1, 1)
-    ax.plot(eigenvalues_res, label='$\mathcal{L}_r$')
-    ax.plot(eigenvalues_bcs, label='$\mathcal{L}_{u_b}$')
+    ax.plot(eigenvalues_res, label=r'$\mathcal{L}_r$')
+    ax.plot(eigenvalues_bcs, label=r'$\mathcal{L}_{u_b}$')
     ax.set_xlabel('index')
     ax.set_ylabel('eigenvalue')
     ax.set_yscale('symlog')
@@ -47,7 +49,7 @@ def plot_eigenvalues(eigenvalues_res, eigenvalues_bcs,plot_folder):
 def plot_adaptive_constant(adaptive_constant,plot_folder):
     fig_3 = plt.figure(3)
     ax = fig_3.add_subplot(1, 1, 1)
-    ax.plot(adaptive_constant, label='$\lambda_{u_b}$')
+    ax.plot(adaptive_constant, label=r'$\lambda_{u_b}$')
     ax.set_xlabel('iterations')
     plt.legend()
     plt.tight_layout()
@@ -57,8 +59,8 @@ def plot_adaptive_constant(adaptive_constant,plot_folder):
 def plot_loss_evolution(loss_res, loss_bcs, plot_folder):
     fig_2 = plt.figure(2)
     ax = fig_2.add_subplot(1, 1, 1)
-    ax.plot(loss_res, label='$\mathcal{L}_{r}$')
-    ax.plot(loss_bcs, label='$\mathcal{L}_{u_b}$')
+    ax.plot(loss_res, label=r'$\mathcal{L}_{r}$')
+    ax.plot(loss_bcs, label=r'$\mathcal{L}_{u_b}$')
     ax.set_yscale('log')
     ax.set_xlabel('iterations')
     ax.set_ylabel('Loss')
@@ -97,7 +99,7 @@ def plot_prediction(x1, x2, U_star, U_pred,plot_folder):
 
 def plot_adaptive_constant(adaptive_constant, plot_folder):
     plt.figure()
-    plt.plot(adaptive_constant, label='$\lambda_{u_b}$')
+    plt.plot(adaptive_constant, label=r'$\lambda_{u_b}$')
     plt.xlabel('Iterations')
     plt.legend()
     plt.tight_layout()
@@ -108,8 +110,7 @@ def training_function(a_1=1, a_2=1, lam=1.0, batch_size=128, nIter=100, seed_val
     tf.random.set_seed(seed_value)  # TensorFlow
     np.random.seed(seed_value)  # NumPy
 
-    parameter_string = 'a_1={:.1f}, a_2={:.1f}, lam={:.1f}'.format(a_1, a_2, lam)
-    os.makedirs(parameter_string, exist_ok=True)
+
 
     def u(x, a_1, a_2):
         return np.sin(a_1 * np.pi * x[:, 0:1]) * np.sin(a_2 * np.pi * x[:, 1:2])
@@ -179,6 +180,11 @@ def training_function(a_1=1, a_2=1, lam=1.0, batch_size=128, nIter=100, seed_val
     print('Relative L2 error_u: {:.2e}'.format(error_u))
     print('Relative L2 error_f: {:.2e}'.format(error_f))
 
+    # parameter_string = 'a_1={:.1f}, a_2={:.1f}, lam={:.1f}'.format(a_1, a_2, lam)
+    parameter_string = 'a_1={:.1f}, a_2={:.1f}, lam={:.1f}, seed={} error_u={:.2e}, error_f={:.2e}'.format(
+        a_1, a_2, lam, seed_value, error_u, error_f)
+    os.makedirs(parameter_string, exist_ok=True)
+
     ### Plot ###
 
     # Exact solution & Predicted solution
@@ -220,17 +226,28 @@ if __name__ == '__main__':
     lam = 1.0
 
     batch_size=128
-    nIter =40001
+    nIter =100
 
     seed_value=1
 
+    parser = argparse.ArgumentParser(description="Training function with optional arguments")
+    parser.add_argument("--a_1", type=int, default=a_1, help="Value for a_1")
+    parser.add_argument("--a_2", type=int, default=a_2, help="Value for a_2")
+    parser.add_argument("--lam", type=float, default=lam, help="Value for lambda")
+    parser.add_argument("--batch_size", type=int, default=batch_size, help="Batch size")
+    parser.add_argument("--nIter", type=int, default=nIter, help="Number of iterations")
+    parser.add_argument("--seed_value", type=int, default=seed_value, help="Seed value")
+
+    args = parser.parse_args()
+
     training_function(
-        a_1=a_1,
-        a_2=a_2,
-        lam=lam,
-        batch_size=batch_size,
-        nIter=nIter,
-        seed_value=seed_value)
+        a_1=args.a_1,
+        a_2=args.a_2,
+        lam=args.lam,
+        batch_size=args.batch_size,
+        nIter=args.nIter,
+        seed_value=args.seed_value
+    )
 
     
 
