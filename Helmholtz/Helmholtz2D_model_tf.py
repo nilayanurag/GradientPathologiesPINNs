@@ -1,4 +1,5 @@
 import tensorflow as tf
+import keras
 import numpy as np
 import timeit
 
@@ -224,8 +225,12 @@ class Helmholtz2D:
         in_dim = size[0]
         out_dim = size[1]
         xavier_stddev = 1. / np.sqrt((in_dim + out_dim) / 2.)
-        return tf.Variable(tf.random_normal([in_dim, out_dim], dtype=tf.float32) * xavier_stddev,
-                           dtype=tf.float32)
+        initializer = tf.random.normal([in_dim, out_dim], mean=0.0, stddev=xavier_stddev, dtype=tf.float32)
+        return tf.Variable(initializer, dtype=tf.float32)
+
+    def xavier_init_tf(self, size):
+        initializer = keras.initializers.GlorotNormal()
+        return tf.Variable(initializer(shape=size), dtype=tf.float32)
 
     # Initialize network weights and biases using Xavier initialization
     def initialize_NN(self, layers):
