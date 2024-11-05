@@ -1,3 +1,4 @@
+import mlflow
 import tensorflow as tf
 import keras
 import numpy as np
@@ -49,6 +50,9 @@ class Helmholtz2D(keras.Model):
         self.layers_dims = layers
         self.network = self.build_network(layers)
 
+
+
+
         # Logger
         self.loss_bcs_log = []
         self.loss_res_log = []
@@ -65,7 +69,27 @@ class Helmholtz2D(keras.Model):
             self.eigenvalue_res_log = []
 
         # Optimizer
-        self.optimizer = keras.optimizers.Adam(learning_rate=1e-3)
+        initial_learning_rate = 1e-3
+        decay_steps = 10
+        decay_rate = 0.9
+
+        self.learning_rate_fn = keras.optimizers.schedules.ExponentialDecay(
+            initial_learning_rate,
+            decay_steps=decay_steps,
+            decay_rate=decay_rate,
+            staircase=False)
+
+
+        self.optimizer = keras.optimizers.Adam(learning_rate=self.learning_rate_fn)
+
+    def initialize_and_print_shapes(self, input_shape):
+        # Perform a forward pass with actual input shape
+        input_data = tf.random.normal(input_shape)
+        _ = self.network(input_data)  # Forward pass to initialize shapes
+
+        # Print layer names and output shapes
+        for i, layer in enumerate(self.network.layers):
+            print(f"Layer {i + 1}: {layer.name}, Output Shape: {layer.output_shape}")
 
     def generate_grad_dict(self, layers):
         num = len(layers) - 1
@@ -79,12 +103,20 @@ class Helmholtz2D(keras.Model):
         model_layers = []
         num_layers = len(layers)
         for l in range(0, num_layers - 2):
-            model_layers.append(tf.keras.layers.Dense(layers[l+1], activation=tf.nn.tanh,
+            model_layers.append(keras.layers.Dense(layers[l+1], activation=tf.nn.tanh,
                                                       kernel_initializer='glorot_normal'))
         # Output layer
-        model_layers.append(tf.keras.layers.Dense(layers[-1], activation=None,
+        model_layers.append(keras.layers.Dense(layers[-1], activation=None,
                                                   kernel_initializer='glorot_normal'))
-        return tf.keras.Sequential(model_layers)
+
+        model = keras.Sequential(model_layers)
+        # for i, layer in enumerate(model_layers):
+        #     # To print the shape, you can build the model with a dummy input shape
+        #     dummy_input = tf.random.normal([1, layers[0]])  # Batch size of 1
+        #     layer_output = layer(dummy_input)
+        #     print(f"Layer {i + 1}: {layer.name}, Shape: {layer_output.shape}")
+
+        return model
 
     def net_u(self, x1, x2):
         x = tf.concat([x1, x2], axis=1)
@@ -274,6 +306,9 @@ class Helmholtz2D(keras.Model):
                 X_bc4_batch, u_bc4_batch,
                 X_res_batch, f_res_batch
             )
+
+            current_lr = self.learning_rate_fn(self.optimizer.iterations).numpy()
+            mlflow.log_metric("decayed_lr", current_lr, step=it)
 
             # Update adaptive constant (if needed)
             if self.model_type in ['M2', 'M4']:

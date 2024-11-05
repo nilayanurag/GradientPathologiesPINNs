@@ -6,7 +6,7 @@ import seaborn as sns
 from Helmholtz2D_model_tf import Sampler, Helmholtz2D
 import os
 import argparse
-
+import mlflow
 
 
 def plot_gradient_distributions(gradients_res_dict, gradients_bcs_dict, num_layers,plot_folder, xlim=(-3, 3), ylim=(0, 100)):
@@ -32,6 +32,7 @@ def plot_gradient_distributions(gradients_res_dict, gradients_bcs_dict, num_laye
 
     plt.tight_layout()
     plt.savefig(plot_folder + '/gradients.png')
+    mlflow.log_artifact(plot_folder + '/gradients.png')
 
 def plot_eigenvalues(eigenvalues_res, eigenvalues_bcs,plot_folder):
     fig_5 = plt.figure(5)
@@ -67,6 +68,7 @@ def plot_loss_evolution(loss_res, loss_bcs, plot_folder):
     plt.legend()
     plt.tight_layout()
     plt.savefig(plot_folder + '/loss.png')
+    mlflow.log_artifact(plot_folder + '/loss.png')
 
 
 def plot_prediction(x1, x2, U_star, U_pred,plot_folder):
@@ -93,6 +95,7 @@ def plot_prediction(x1, x2, U_star, U_pred,plot_folder):
     plt.title('Absolute error')
     plt.tight_layout()
     plt.savefig(plot_folder + '/solution.png')
+    mlflow.log_artifact(plot_folder + '/solution.png')
 
 
 
@@ -106,7 +109,27 @@ def plot_adaptive_constant(adaptive_constant, plot_folder):
     plt.savefig(os.path.join(plot_folder, 'adaptive_constant.png'))
 
 
-def training_function(a_1=1, a_2=1, lam=1.0, batch_size=128, nIter=100, seed_value=1234):
+def generate_layers(num_hidden_layers, hidden_layer_width):
+    # Fixed input and output sizes
+    input_size = 2
+    output_size = 1
+
+    # Create the layers array
+    layers = [input_size] + [hidden_layer_width] * num_hidden_layers + [output_size]
+    return layers
+
+
+
+def training_function(a_1=1, a_2=1, lam=1.0, batch_size=128, nIter=100, seed_value=1234,
+                      num_hidden_layers=4, hidden_layer_width=50):
+    mlflow.log_param("a_1", a1)
+    mlflow.log_param("a_2", a2)
+    mlflow.log_param("lam", lam)
+    mlflow.log_param("batch_size", batch_size)
+    mlflow.log_param("nIter", nIter)
+    mlflow.log_param("seed_value", seed)
+    mlflow.log_param("num_hidden_layers", num_hidden_layers)
+    mlflow.log_param("hidden_layer_width", hidden_layer_width)
     tf.random.set_seed(seed_value)  # TensorFlow
     np.random.seed(seed_value)  # NumPy
 
@@ -152,8 +175,12 @@ def training_function(a_1=1, a_2=1, lam=1.0, batch_size=128, nIter=100, seed_val
     mode = 'M1'  # Method: 'M1', 'M2', 'M3', 'M4'
     stiff_ratio = False  # Log the eigenvalues of Hessian of losses
 
-    layers = [2, 50, 50, 50, 1]
+
+
+    layers = generate_layers(num_hidden_layers, hidden_layer_width)
+
     model = Helmholtz2D(layers, None, None, bcs_sampler, res_sampler, lam, mode, stiff_ratio)
+
 
     # Train model
     model.train(nIter=nIter, batch_size=batch_size)
@@ -179,11 +206,15 @@ def training_function(a_1=1, a_2=1, lam=1.0, batch_size=128, nIter=100, seed_val
 
     print('Relative L2 error_u: {:.2e}'.format(error_u))
     print('Relative L2 error_f: {:.2e}'.format(error_f))
+    mlflow.log_metric("error_u", error_u)
+    mlflow.log_metric("error_f", error_f)
 
     # parameter_string = 'a_1={:.1f}, a_2={:.1f}, lam={:.1f}'.format(a_1, a_2, lam)
-    parameter_string = 'a_1={:.1f}, a_2={:.1f}, lam={:.1f}, seed={} error_u={:.2e}, error_f={:.2e}'.format(
+    parameter_string = 'plots/a_1={:.1f}, a_2={:.1f}, lam={:.1f}, seed={} error_u={:.2e}, error_f={:.2e}'.format(
         a_1, a_2, lam, seed_value, error_u, error_f)
     os.makedirs(parameter_string, exist_ok=True)
+
+    print(model.network.summary())
 
     ### Plot ###
 
@@ -219,8 +250,8 @@ def training_function(a_1=1, a_2=1, lam=1.0, batch_size=128, nIter=100, seed_val
 
 
 if __name__ == '__main__':
-    a_1 = 1
-    a_2 = 4
+    a_1 = [1]
+    a_2 = [4]
 
     # Parameter
     lam = 1.0
@@ -228,26 +259,43 @@ if __name__ == '__main__':
     batch_size=128
     nIter =100
 
-    seed_value=1
+    seed_value=[11,12,13]
 
-    parser = argparse.ArgumentParser(description="Training function with optional arguments")
-    parser.add_argument("--a_1", type=int, default=a_1, help="Value for a_1")
-    parser.add_argument("--a_2", type=int, default=a_2, help="Value for a_2")
-    parser.add_argument("--lam", type=float, default=lam, help="Value for lambda")
-    parser.add_argument("--batch_size", type=int, default=batch_size, help="Batch size")
-    parser.add_argument("--nIter", type=int, default=nIter, help="Number of iterations")
-    parser.add_argument("--seed_value", type=int, default=seed_value, help="Seed value")
+    layer_hidden=[3,5,7]
+    layer_width=[30,50,70]
 
-    args = parser.parse_args()
+    # parser = argparse.ArgumentParser(description="Training function with optional arguments")
+    # parser.add_argument("--a_1", type=int, default=a_1, help="Value for a_1")
+    # parser.add_argument("--a_2", type=int, default=a_2, help="Value for a_2")
+    # parser.add_argument("--lam", type=float, default=lam, help="Value for lambda")
+    # parser.add_argument("--batch_size", type=int, default=batch_size, help="Batch size")
+    # parser.add_argument("--nIter", type=int, default=nIter, help="Number of iterations")
+    # parser.add_argument("--seed_value", type=int, default=seed_value, help="Seed value")
+    #
+    # args = parser.parse_args()
+    #
+    # training_function(
+    #     a_1=args.a_1,
+    #     a_2=args.a_2,
+    #     lam=args.lam,
+    #     batch_size=args.batch_size,
+    #     nIter=args.nIter,
+    #     seed_value=args.seed_value
+    # )
+    mlflow.set_experiment("Helmholtz2D_predictive_lab")
+    for a1 in a_1:
+        for a2 in a_2:
+            for seed in seed_value:
+                for num_hidden_layers in layer_hidden:
+                    for hidden_layer_width in layer_width:
+                        with mlflow.start_run():
+                            training_function(a_1=a1, a_2=a2, lam=lam,
+                                              batch_size=batch_size, nIter=nIter,
+                                              seed_value=seed,
+                                              num_hidden_layers=num_hidden_layers,
+                                              hidden_layer_width=hidden_layer_width)
 
-    training_function(
-        a_1=args.a_1,
-        a_2=args.a_2,
-        lam=args.lam,
-        batch_size=args.batch_size,
-        nIter=args.nIter,
-        seed_value=args.seed_value
-    )
+
 
     
 
