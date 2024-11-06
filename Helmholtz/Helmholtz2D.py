@@ -127,7 +127,7 @@ def training_function(a_1=1, a_2=1, lam=1.0, batch_size=128, nIter=100, seed_val
     mlflow.log_param("lam", lam)
     mlflow.log_param("batch_size", batch_size)
     mlflow.log_param("nIter", nIter)
-    mlflow.log_param("seed_value", seed)
+    mlflow.log_param("seed_value", seed_value)
     mlflow.log_param("num_hidden_layers", num_hidden_layers)
     mlflow.log_param("hidden_layer_width", hidden_layer_width)
     tf.random.set_seed(seed_value)  # TensorFlow
