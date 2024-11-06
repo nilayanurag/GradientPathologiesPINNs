@@ -289,11 +289,12 @@ if __name__ == '__main__':
                 for num_hidden_layers in layer_hidden:
                     for hidden_layer_width in layer_width:
                         with mlflow.start_run():
-                            training_function(a_1=a1, a_2=a2, lam=lam,
-                                              batch_size=batch_size, nIter=nIter,
-                                              seed_value=seed,
-                                              num_hidden_layers=num_hidden_layers,
-                                              hidden_layer_width=hidden_layer_width)
+                            with tf.device('/GPU:0'):
+                                training_function(a_1=a1, a_2=a2, lam=lam,
+                                                  batch_size=batch_size, nIter=nIter,
+                                                  seed_value=seed,
+                                                  num_hidden_layers=num_hidden_layers,
+                                                  hidden_layer_width=hidden_layer_width)
 
 
 
