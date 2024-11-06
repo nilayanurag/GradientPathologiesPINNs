@@ -257,23 +257,23 @@ if __name__ == '__main__':
     lam = 1.0
 
     batch_size=128
-    nIter =1000
+    nIter =40001
 
-    seed_value=[11]
+    seed_value=13
 
-    layer_hidden=[3]
-    layer_width=[30]
+    layer_hidden=[3,5,7]
+    layer_width=[30,50,100]
 
-    # parser = argparse.ArgumentParser(description="Training function with optional arguments")
+    parser = argparse.ArgumentParser(description="Training function with optional arguments")
     # parser.add_argument("--a_1", type=int, default=a_1, help="Value for a_1")
     # parser.add_argument("--a_2", type=int, default=a_2, help="Value for a_2")
     # parser.add_argument("--lam", type=float, default=lam, help="Value for lambda")
     # parser.add_argument("--batch_size", type=int, default=batch_size, help="Batch size")
     # parser.add_argument("--nIter", type=int, default=nIter, help="Number of iterations")
-    # parser.add_argument("--seed_value", type=int, default=seed_value, help="Seed value")
-    #
-    # args = parser.parse_args()
-    #
+    parser.add_argument("--seed_value", type=int, default=seed_value, help="Seed value")
+
+    args = parser.parse_args()
+
     # training_function(
     #     a_1=args.a_1,
     #     a_2=args.a_2,
@@ -282,19 +282,17 @@ if __name__ == '__main__':
     #     nIter=args.nIter,
     #     seed_value=args.seed_value
     # )
-    mlflow.set_experiment("Helmholtz2D_predictive_lab")
+    mlflow.set_experiment("Helmholtz2D_predictive_lab_40k")
     for a1 in a_1:
         for a2 in a_2:
-            for seed in seed_value:
-                for num_hidden_layers in layer_hidden:
-                    for hidden_layer_width in layer_width:
-                        with mlflow.start_run():
-                            with tf.device('/GPU:0'):
-                                training_function(a_1=a1, a_2=a2, lam=lam,
-                                                  batch_size=batch_size, nIter=nIter,
-                                                  seed_value=seed,
-                                                  num_hidden_layers=num_hidden_layers,
-                                                  hidden_layer_width=hidden_layer_width)
+            for num_hidden_layers in layer_hidden:
+                for hidden_layer_width in layer_width:
+                    with mlflow.start_run():
+                        training_function(a_1=a1, a_2=a2, lam=lam,
+                                          batch_size=batch_size, nIter=nIter,
+                                          seed_value=args.seed_value,
+                                          num_hidden_layers=num_hidden_layers,
+                                          hidden_layer_width=hidden_layer_width)
 
 
 
