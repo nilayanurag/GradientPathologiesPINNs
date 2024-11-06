@@ -282,7 +282,7 @@ if __name__ == '__main__':
     #     nIter=args.nIter,
     #     seed_value=args.seed_value
     # )
-    mlflow.set_experiment("Helmholtz2D_predictive_lab_40k")
+    mlflow.set_experiment("Helmholtz2D_predictive_lab_benchmark")
     for a1 in a_1:
         for a2 in a_2:
             for num_hidden_layers in layer_hidden:
