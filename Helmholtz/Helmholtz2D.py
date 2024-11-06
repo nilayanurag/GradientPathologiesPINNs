@@ -261,7 +261,7 @@ if __name__ == '__main__':
 
     seed_value=13
 
-    layer_hidden=[3,5,7]
+    layer_hidden=[4,7]
     layer_width=[30,50,100]
 
     parser = argparse.ArgumentParser(description="Training function with optional arguments")
